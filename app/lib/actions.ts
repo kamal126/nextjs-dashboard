@@ -38,3 +38,25 @@ export async function createInvoices(formdata: FormData) {
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices')
 }
+
+// use zod to update the expected types
+const UpdateInvoice = FormSchema.omit({id:true, date:true});
+
+export async function updateInvoice(id:string, formdata: FormData) {
+    const {customerId, amount, status} = UpdateInvoice.parse({
+        customerId: formdata.get('customerId'),
+        amount: formdata.get('amount'),
+        status: formdata.get('status'),
+    });
+
+    const amountInCents = amount * 100;
+
+    await sql`
+    UPDATE invoices
+    SET cutomer_id = ${customerId}, amount=${amount}, status=${status}
+    WHERE id = ${id}
+    `;
+
+    revalidatePath('/dashboard/invoices');
+    redirect('/dashboard/invoices');
+}
