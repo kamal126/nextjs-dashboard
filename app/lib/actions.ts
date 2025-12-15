@@ -53,9 +53,9 @@ export async function updateInvoice(id:string, formdata: FormData) {
 
     await sql`
     UPDATE invoices
-    SET cutomer_id = ${customerId}, amount=${amount}, status=${status}
+    SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
     WHERE id = ${id}
-    `;
+  `;
 
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
