@@ -67,12 +67,24 @@ export async function createInvoices(prevState: State, formdata: FormData) {
 // use zod to update the expected types
 const UpdateInvoice = FormSchema.omit({ id: true, date: true });
 
-export async function updateInvoice(id: string, formdata: FormData) {
-  const { customerId, amount, status } = UpdateInvoice.parse({
+export async function updateInvoice(
+  id: string,
+  prevState:State,
+  formdata: FormData) {
+    const validatedFields =  UpdateInvoice.safeParse({
     customerId: formdata.get("customerId"),
     amount: formdata.get("amount"),
     status: formdata.get("status"),
   });
+
+  if(!validatedFields.success){
+    return{
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing fields. Failed to update invoice.'
+    };
+  }
+
+  const { customerId, amount, status } = validatedFields.data;
 
   const amountInCents = amount * 100;
 
@@ -91,6 +103,31 @@ export async function updateInvoice(id: string, formdata: FormData) {
   revalidatePath("/dashboard/invoices");
   redirect("/dashboard/invoices");
 }
+
+// export async function updateInvoice(id: string, formdata: FormData) {
+//   const { customerId, amount, status } = UpdateInvoice.parse({
+//     customerId: formdata.get("customerId"),
+//     amount: formdata.get("amount"),
+//     status: formdata.get("status"),
+//   });
+
+//   const amountInCents = amount * 100;
+
+//   try {
+//     await sql`
+//         UPDATE invoices
+//         SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+//         WHERE id = ${id}
+//       `;
+//   } catch (error) {
+//     console.log(error);
+//     throw new Error(`Database Error: Failed to Update Invoice.`);
+
+//   }
+
+//   revalidatePath("/dashboard/invoices");
+//   redirect("/dashboard/invoices");
+// }
 
 export async function deleteInvoice(id: string) {
   // throw new Error('Failed to delete invoice.');  // manually create simulate error
